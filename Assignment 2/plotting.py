@@ -263,10 +263,6 @@ def plot_optimization_problem_fitness(fitness_function, iterations, random_state
     mimic_fitness_curve_bf[:mimic_fitness_curve.shape[0]] = mimic_fitness_curve
 
     # Plot the convergance times.
-    print("RHC - " + str(rhc_elapsed))
-    print("SA - " + str(sa_elapsed))
-    print("GA - " + str(ga_elapsed))
-    print("MIMIC - " + str(mimic_elapsed))
     plot_ro_algo_times(rhc_elapsed, ga_elapsed, sa_elapsed, mimic_elapsed, 'Traveling Sales Person')
 
     # Plot the fitness over iterations.
@@ -304,4 +300,5 @@ def plot_ro_algo_times(rch_time, ga_time, sa_time, mimic_time, title):
     plt.xlabel('Algorithm')
     plt.title(title)
 
-    plt.show()
+    plt.savefig('Charts/OptimizationProblems/' + title + ' - TimeComplexity.png')
+    plt.clf()
