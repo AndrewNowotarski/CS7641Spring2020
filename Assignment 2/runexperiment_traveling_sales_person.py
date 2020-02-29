@@ -23,5 +23,5 @@ fitness_coords = mlrose.TravellingSales(coords= coords_list)
 problem_fit = mlrose.TSPOpt(length = 8, fitness_fn= fitness_coords, maximize=False)
 
 # Solve the problem with genetic algorithm
-plotting.plot_optimization_problem_fitness(problem_fit, 100, 2, 'Traveling Sales Person')
+plotting.plot_optimization_problem_fitness(problem_fit, 100, 44, 'Traveling Sales Person')
 

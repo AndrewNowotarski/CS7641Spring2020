@@ -246,7 +246,7 @@ def plot_optimization_problem_fitness(fitness_function, iterations, random_state
     ga_elapsed = timeit.default_timer() - start_ga
 
     start_mimic = timeit.default_timer()
-    mimic_best_state, mimic_best_fitness, mimic_fitness_curve =  mlrose.random_hill_climb(fitness_function, max_iters=iterations, random_state= random_state, curve=True)
+    mimic_best_state, mimic_best_fitness, mimic_fitness_curve =  mlrose.mimic(fitness_function, max_iters=iterations, random_state= random_state, curve=True)
     mimic_elapsed = timeit.default_timer() - start_mimic
 
     # Fill in arrays.
@@ -263,7 +263,7 @@ def plot_optimization_problem_fitness(fitness_function, iterations, random_state
     mimic_fitness_curve_bf[:mimic_fitness_curve.shape[0]] = mimic_fitness_curve
 
     # Plot the convergance times.
-    plot_ro_algo_times(rhc_elapsed, ga_elapsed, sa_elapsed, mimic_elapsed, 'Traveling Sales Person')
+    plot_ro_algo_times(rhc_elapsed, ga_elapsed, sa_elapsed, mimic_elapsed, title)
 
     # Plot the fitness over iterations.
     fig = plt.figure(figsize=(8,6))
