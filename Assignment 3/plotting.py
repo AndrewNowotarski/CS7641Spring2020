@@ -1,7 +1,7 @@
 # Andrew Nowotarski
 # anowotarski3
 # CS 7641 ML Spring 2020
-# Assignment 1: Supervised Learning
+# Assignment 3: Unsupervised Learning and Dimensionality Reduction
 
 import pandas as pd
 import numpy as np
@@ -12,6 +12,8 @@ from sklearn.datasets import load_digits
 from sklearn.model_selection import learning_curve
 from sklearn.model_selection import validation_curve
 from sklearn.model_selection import ShuffleSplit
+from scipy.stats import kurtosis,entropy
+from sklearn.model_selection import train_test_split
 
 # CODE SOURCED FROM:
 # https://scikit-learn.org/stable/auto_examples/model_selection/plot_learning_curve.html
@@ -94,7 +96,7 @@ def plot_learning_curve(estimator, X, y, dataset, modelType, analysisRound, ylim
     plt.xlabel("Training Size")
     plt.ylabel("Score")
     plt.title("Learning Curve " + modelType)
-    plt.savefig('Charts/' + dataset + '/' + analysisRound + '/' + modelType + '/Learning Curve ' + modelType + '.png')
+    plt.savefig('Charts/' + dataset + '/' + modelType + '/' + analysisRound + '/Learning Curve ' + modelType + '.png')
     plt.clf()
 
     # Plot n_samples vs fit_times
@@ -104,7 +106,7 @@ def plot_learning_curve(estimator, X, y, dataset, modelType, analysisRound, ylim
     plt.xlabel("Training examples")
     plt.ylabel("Fit Times")
     plt.title("Scalability of the model " + modelType)
-    plt.savefig('Charts/' + dataset + '/' + analysisRound + '/' + modelType + '/Samples Versus Fit Time ' + modelType + '.png')
+    plt.savefig('Charts/' + dataset + '/' + modelType + '/' + analysisRound + '/Samples Versus Fit Time ' + modelType + '.png')
     plt.clf()
 
     # Plot fit_time vs score
@@ -114,7 +116,7 @@ def plot_learning_curve(estimator, X, y, dataset, modelType, analysisRound, ylim
     plt.xlabel("Fit Times")
     plt.ylabel("Score")
     plt.title("Performance of the model " + modelType)
-    plt.savefig('Charts/' + dataset + '/' + analysisRound + '/' + modelType + '/Fit Time Versus Score ' + modelType + '.png')
+    plt.savefig('Charts/' + dataset + '/' + modelType + '/' + analysisRound + '/Fit Time Versus Score ' + modelType + '.png')
     plt.clf()
 
 # CODE SOURCED FROM
@@ -149,7 +151,7 @@ def plot_validation_curve(estimator, X, y, dataset, modelType, analysisRound, xl
     plt.ylabel("Accuracy Score")
     plt.legend(loc="best")
 
-    plt.savefig('Charts/' + dataset + '/' + analysisRound + '/' +  modelType + '/Validation Curve ' + modelType + '.png')
+    plt.savefig('Charts/' + dataset + '/' + modelType + '/' + analysisRound + '/Validation Curve ' + modelType + '.png')
     plt.clf()
 
 # CODE SOURCED FROM
@@ -195,4 +197,181 @@ def plot_roc_curves(classifiers, X_train, Y_train, X_test, Y_test, dataset, file
     plt.legend(prop={'size':13}, loc='lower right')
 
     plt.savefig('Charts/' + dataset + '/' + filename)
+    plt.clf()
+
+def plot_cluster_scores(title, img_title, cluster_results):
+
+    x = cluster_results.iloc[:,0]
+
+    # Plot the KMeans / EM Scores for various metrics. #
+    plt.figure(figsize = (8,6))
+
+    # Mutual Information. # 
+    plt.plot(x, cluster_results["km_mutual_info"], color='blue', linewidth=4,label = "KM Mutual info")
+    plt.plot(x, cluster_results["em_mutual_info"],linestyle='dashed',color='blue', linewidth=4,label = "EM Mutual info")
+
+    # Random Index. #
+    plt.plot(x, cluster_results["km_rand"],color='green', linewidth=4,label = "KM Rand Index")
+    plt.plot(x, cluster_results["em_rand"],linestyle='dashed',color='green', linewidth=4,label = "EM Rand Index")
+
+    # Homogeneity. #
+    plt.plot(x, cluster_results["km_homogeneity"],color='red', linewidth=4,label = "KM Homogeneity")
+    plt.plot(x, cluster_results["em_homgeneity"],linestyle='dashed',color='red', linewidth=4,label = "EM Homogeneity")
+
+    # V-Measure. #
+    plt.plot(x, cluster_results["km_v_measure"],color='orange', linewidth=4,label = "KM V-Measure");
+    plt.plot(x, cluster_results["em_v_measure"],linestyle='dashed',color='orange', linewidth=4,label = "EM V-Measure")
+
+    plt.title("KMeans / Expectation Maximization - " + title)
+    plt.xlabel("Clusters")
+    plt.ylabel("Score")
+    plt.legend(prop={'size':13}, loc='lower right')
+
+    plt.savefig('Charts/' + img_title)
+    plt.clf()
+
+def plot_cluster_cost(title, img_title, cluster_algo, ylabel, cluster_results):
+
+    x = cluster_results.iloc[:,0]
+
+    plt.figure(figsize = (8,6)) 
+
+    plt.plot(x, cluster_results[cluster_algo + "_score"], marker='o', markerfacecolor='blue', markersize=12, color='skyblue', linewidth=4,label = "Clusters")
+
+    plt.title(cluster_algo.upper() + " Cost - " + title)
+    plt.xlabel("Clusters")
+    plt.ylabel(ylabel)
+
+    plt.savefig('Charts/' + img_title)
+    plt.clf()
+
+def plot_cluster_speed(title, img_title, cluster_results):
+
+    # Plot KMeans / Expectation Maximization Times. #
+    x = cluster_results.iloc[:,0]
+
+    plt.figure(figsize = (8,6))
+    plt.plot(x ,cluster_results["km_time"], label = "KMeans")
+    plt.plot(x, cluster_results["em_time"], label = "Expectation Maximization")
+    plt.title(title)
+    plt.xlabel("Clusters")
+    plt.ylabel("Time")
+    plt.legend(loc='upper right')
+
+    plt.savefig('Charts/' + img_title)
+    plt.clf()
+
+def plot_pca_eigen_values(title, img_title, fittedModel, features):
+
+    # Get the explained variance and ratio. #
+    explained_variance_ratio = pd.Series(fittedModel.explained_variance_ratio_)
+    explained_variance = pd.Series(fittedModel.explained_variance_)
+
+    # Plot the eigen values. #
+    plt.figure(figsize= (8,6))
+
+    explained_variance_ratio.plot(ylim = (0.,0.35),c = 'r',label = 'Explained Variance')
+    ax = explained_variance.plot(kind = 'bar',ylim = (0.,0.35),label = "Explained Variance Ratio")
+
+    ticks = ax.xaxis.get_ticklocs()
+    ticklabels = [l.get_text() for l in ax.xaxis.get_ticklabels()]
+    ax.xaxis.set_ticks(ticks[::10])
+    ax.xaxis.set_ticklabels(ticklabels[::10]);
+    plt.title("PCA Eigen Values Distribution - " + title)
+    plt.xlabel("Features By Variance Ordered")
+    plt.ylabel("Explained Variance / Ratio")
+    plt.legend(loc='upper right')
+
+    plt.savefig('Charts/' + img_title)
+    plt.clf()
+
+    print("Reduced Dimension: " + str(features.shape[1]-len([i for i in explained_variance_ratio if i >= 0.005])) + " out of " + str(features.shape[1]))
+    print("Variance captured: " + str(sum([i for i in explained_variance_ratio if i >= 0.005])*100.) +  "%")
+
+def plot_ica_kurtosis(title, img_title, fittedModel, ica_features, features):
+
+    # Calculate Kurtosis for Features .#
+    order = [-abs(kurtosis(ica_features[:,i])) for i in range(ica_features.shape[1])]
+    ica_features = ica_features[:,np.array(order).argsort()]
+    ica_res =  pd.Series([abs(kurtosis(ica_features[:,i])) for i in range(ica_features.shape[1])]);
+
+    plt.figure(figsize=(8,6))
+    ax = ica_res.plot(kind = 'bar',logy = True);
+    ticks = ax.xaxis.get_ticklocs()
+    ticklabels = [l.get_text() for l in ax.xaxis.get_ticklabels()]
+    ax.xaxis.set_ticks(ticks[::10])
+    ax.xaxis.set_ticklabels(ticklabels[::10]);
+
+    plt.title("ICA Kurtosis Distribution - " + title)
+    plt.xlabel("Features By Absolute Kurtosis Value Ordered")
+    plt.ylabel("Absolute Kurtosis")
+
+    plt.savefig('Charts/' + img_title)
+    plt.clf()
+
+    print("Reduced Dimension: " + str(features.shape[1]-len([i for i in ica_res if i >= 1.])) +  " out of " + str(features.shape[1]))
+
+def plot_random_projections(title, img_title, fittedModel, rp_features, features):
+
+    # Calculate some metric.. #
+    print("Reduced Dimension: " + str(rp_features.shape[1]) +  " out of " + str(features.shape[1]))
+
+def plot_svd(title, img_title, fittedModel, svd_features, features):
+
+    print("Reduced Dimension: " + str(svd_features.shape[1]) +  " out of " + str(features.shape[1]))
+
+def plot_roc_curves_dimensionality_reduction(classifiers, title, img_title):
+
+    print(img_title)
+
+    # Define a result table as a DataFrame.
+    result_table = pd.DataFrame(columns=['classifiers', 'fpr','tpr','auc'])
+
+    # Train the models and record the results.
+    for cls in classifiers:
+
+        print("Working on " + cls.name)
+
+        # Split the data into train / test sets.
+        X_train, X_test, Y_train, Y_test = train_test_split(cls.features, cls.labels, test_size=0.20, random_state = 41)
+        
+        Y_train = Y_train.ravel()
+        Y_test = Y_test.ravel()
+
+        model = cls.model.fit(X_train, Y_train)
+        yproba = model.predict_proba(X_test)[::,1]
+        
+        fpr, tpr, _ = roc_curve(Y_test.ravel(),  yproba)
+        auc = roc_auc_score(Y_test.ravel(), yproba)
+        
+        result_table = result_table.append({'classifiers':cls.name,
+                                            'fpr':fpr, 
+                                            'tpr':tpr, 
+                                            'auc':auc}, ignore_index=True)
+
+    # Set name of the classifiers as index labels
+    result_table.set_index('classifiers', inplace=True)
+
+    # Plot the chart.
+    print("Plotting the data...")
+
+    fig = plt.figure(figsize=(8,6))
+
+    for i in result_table.index:
+        plt.plot(result_table.loc[i]['fpr'], 
+                result_table.loc[i]['tpr'], 
+                label="{}, AUC={:.3f}".format(i, result_table.loc[i]['auc']))
+        
+    plt.plot([0,1], [0,1], color='orange', linestyle='--')
+
+    plt.xticks(np.arange(0.0, 1.1, step=0.1))
+    plt.xlabel("False Positive Rate", fontsize=15)
+
+    plt.yticks(np.arange(0.0, 1.1, step=0.1))
+    plt.ylabel("True Positive Rate", fontsize=15)
+
+    plt.title(title, fontweight='bold', fontsize=15)
+    plt.legend(prop={'size':13}, loc='lower right')
+
+    plt.savefig(img_title)
     plt.clf()
