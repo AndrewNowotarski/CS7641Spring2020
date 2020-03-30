@@ -29,7 +29,7 @@ labels = np.array(pima.iloc[:,-1:])
 # Part 1. K-Means and EM Clustering. #
 ######################################
 
-analysis.run_clustering_algorithms(features, labels, dataset_name, 'baseline')
+#analysis.run_clustering_algorithms(features, labels, dataset_name, 'baseline')
 
 #####################################
 # Part 2. Dimensionality Reduction. #
@@ -59,19 +59,19 @@ rp_features = rp.fit_transform(features)
 
 plotting.plot_random_projections(dataset_name, dataset_name + '/rp_baseline.png', rp, rp_features, features)
 
-##################
-# Truncated SVD. #
-##################
+# ##################
+# # Truncated SVD. #
+# ##################
 svd = TruncatedSVD()
 svd_features = svd.fit_transform(features)
 
 plotting.plot_svd(dataset_name, dataset_name + '/svd_baseline.png', svd, svd_features, features)
 
-###########################################################
-# Part 3. Clustering with Dimensionally Reduced Features. #
-###########################################################
+# ###########################################################
+# # Part 3. Clustering with Dimensionally Reduced Features. #
+# ###########################################################
 
-analysis.run_clustering_algorithms(pca_features, labels, dataset_name, 'pca_reduced')
-analysis.run_clustering_algorithms(ica_features, labels, dataset_name, 'ica_reduced')
-analysis.run_clustering_algorithms(rp_features, labels, dataset_name, 'randomized_projections_reduced')
-analysis.run_clustering_algorithms(svd_features, labels, dataset_name, 'svd_reduced')
+# analysis.run_clustering_algorithms(pca_features, labels, dataset_name, 'pca_reduced')
+# analysis.run_clustering_algorithms(ica_features, labels, dataset_name, 'ica_reduced')
+# analysis.run_clustering_algorithms(rp_features, labels, dataset_name, 'randomized_projections_reduced')
+# analysis.run_clustering_algorithms(svd_features, labels, dataset_name, 'svd_reduced')

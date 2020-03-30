@@ -38,34 +38,34 @@ labels = np.array(titanic.iloc[:,-1:])
 ########
 # PCA. #
 ########
-# pca = PCA()
-# pca_features = pca.fit_transform(features)
+pca = PCA()
+pca_features = pca.fit_transform(features)
 
-# plotting.plot_pca_eigen_values(dataset_name, dataset_name + '/pca_baseline.png', pca, features)
+plotting.plot_pca_eigen_values(dataset_name, dataset_name + '/pca_baseline.png', pca, features)
 
 ########
 # LCA. #
 ########
-# ica = FastICA(n_components=20, max_iter=5000, tol=.15)
-# ica_features = ica.fit_transform(features)
+ica = FastICA(n_components=20, max_iter=5000, tol=.15)
+ica_features = ica.fit_transform(features)
 
-# plotting.plot_ica_kurtosis(dataset_name, dataset_name + '/ica_baseline.png', ica, ica_features, features)
+plotting.plot_ica_kurtosis(dataset_name, dataset_name + '/ica_baseline.png', ica, ica_features, features)
 
 ###########################
 # Randomized Projections. #
 ###########################
-# rp = GaussianRandomProjection(n_components=20)
-# rp_features = rp.fit_transform(features)
+rp = GaussianRandomProjection(n_components=20)
+rp_features = rp.fit_transform(features)
 
-# plotting.plot_random_projections(dataset_name, dataset_name + '/rp_baseline.png', rp, rp_features, features)
+plotting.plot_random_projections(dataset_name, dataset_name + '/rp_baseline.png', rp, rp_features, features)
 
 ##################
 # Truncated SVD. #
 ##################
-# svd = TruncatedSVD(n_components=20)
-# svd_features = svd.fit_transform(features)
+svd = TruncatedSVD(n_components=20)
+svd_features = svd.fit_transform(features)
 
-# plotting.plot_svd(dataset_name, dataset_name + '/svd_baseline.png', svd, svd_features, features)
+plotting.plot_svd(dataset_name, dataset_name + '/svd_baseline.png', svd, svd_features, features)
 
 ###########################################################
 # Part 3. Clustering with Dimensionally Reduced Features. #
@@ -120,12 +120,12 @@ labels = np.array(titanic.iloc[:,-1:])
 ###########################################################
 
 # Optimal clusters for KMeans - 4. #
-kmeansOptimalModel, kmeans_Features = analysis.get_kmeans_clustering_predictions(features, 4)
-kmeans_Features = kmeans_Features.reshape(-1, 1)
+# kmeansOptimalModel, kmeans_Features = analysis.get_kmeans_clustering_predictions(features, 4)
+# kmeans_Features = kmeans_Features.reshape(-1, 1)
 
-# Optimal clusters for Expectations Maximization - 4. #
-emOptimalModel, em_Features = analysis.get_expectations_maximization_predictions(features, 4)
-em_Features = em_Features.reshape(-1, 1)
+# # Optimal clusters for Expectations Maximization - 4. #
+# emOptimalModel, em_Features = analysis.get_expectations_maximization_predictions(features, 4)
+# em_Features = em_Features.reshape(-1, 1)
 
 # Tune KMeans. #
 #analysis.run_analysis(neural_network.MLPClassifier(), kmeans_Features, labels, 'Titanic', 'KMeans', 'Round_1', 'Activation', 'activation', ['identity', 'logistic', 'tanh', 'relu'])
@@ -138,12 +138,12 @@ em_Features = em_Features.reshape(-1, 1)
 #analysis.run_analysis(neural_network.MLPClassifier(activation='relu', solver='adam'), em_Features, labels, 'Titanic', 'EM', 'Round_3', 'Beta_1', 'beta_1', [.1, .2, .3, .4, .5, .6, .7, .8, .9])
 
 # Networks Using Same Settings as Project 1 for Baseline Scores. #
-kmeansNN = cs.Classifier("KMeans", neural_network.MLPClassifier(activation='relu', solver='adam', beta_1=0.5), kmeans_Features, labels)
-emNN = cs.Classifier("Expectation Maximization", neural_network.MLPClassifier(activation='relu', solver='adam', beta_1=0.4), em_Features, labels)
-baseLineNN = cs.Classifier("Baseline", neural_network.MLPClassifier(activation='identity', solver='adam', beta_1=0.4), features, labels)
+# kmeansNN = cs.Classifier("KMeans", neural_network.MLPClassifier(activation='relu', solver='adam', beta_1=0.5), kmeans_Features, labels)
+# emNN = cs.Classifier("Expectation Maximization", neural_network.MLPClassifier(activation='relu', solver='adam', beta_1=0.4), em_Features, labels)
+# baseLineNN = cs.Classifier("Baseline", neural_network.MLPClassifier(activation='identity', solver='adam', beta_1=0.4), features, labels)
 
-classifiers = [kmeansNN,
-                emNN,
-                baseLineNN]
+# classifiers = [kmeansNN,
+#                 emNN,
+#                 baseLineNN]
 
-plotting.plot_roc_curves_dimensionality_reduction(classifiers, "Clustering Neural Networks - Tuned", 'Charts/Titanic/' + dataset_name + "_clustered_neural_networks_roc_curve.png")
+# plotting.plot_roc_curves_dimensionality_reduction(classifiers, "Clustering Neural Networks - Tuned", 'Charts/Titanic/' + dataset_name + "_clustered_neural_networks_roc_curve.png")
