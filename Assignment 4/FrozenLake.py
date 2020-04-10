@@ -3,222 +3,147 @@
 # CS 7641 ML Spring 2020
 # Assignment 4: Markov Decision Processes
 
-# Frozen Lake - Open AI Gym
+# Frozen Grid - Open AI Gym
 import numpy as np
-import gym
-from gym import wrappers
 import time
 import sys
-import Plotting as plt
+import mdptoolbox
+import mdptoolbox.example
+import Plotting as plot
+import matplotlib.pyplot as plt
+import gym
 
-environment  = 'FrozenLake-v0'
-env = gym.make(environment)
-env = env.unwrapped
-desc = env.unwrapped.desc
+problemName = 'FrozenLake'
+env = gym.make("FrozenLake8x8-v0")
 
-time_array=[0]*10
-gamma_arr=[0]*10
-iters=[0]*10
-list_scores=[0]*10
+# Convert Open AI Gym problem to work with mdptoolbox. #
+nA, nS = env.nA, env.nS
+P = np.zeros([nA, nS, nS])
+R = np.zeros([nS, nA])
+for s in range(nS):
+    for a in range(nA):
+        transitions = env.P[s][a]
+        for p_trans, next_s, reward, _ in transitions:
+            P[a,s,next_s] += p_trans
+            R[s,a] = reward
+        P[a,s,:] /= np.sum(P[a,s,:])
 
-### POLICY ITERATION ####
-print('POLICY ITERATION WITH FROZEN LAKE')
+#####################
+# Policy Iteration. #
+#####################
+print('Performing PI Tests...')
+
+value_f = []
+policy = []
+iterations = []
+time_taken = []
+epsilons = []
+
 for i in range(0,10):
-    st=time.time()
-    best_policy,k = policy_iteration(env, gamma = (i+0.5)/10)
-    scores = evaluate_policy(env, best_policy, gamma = (i+0.5)/10)
-    end=time.time()
-    gamma_arr[i]=(i+0.5)/10
-    list_scores[i]=np.mean(scores)
-    iters[i] = k
-    time_array[i]=end-st
+	pi = mdptoolbox.mdp.PolicyIteration(P, R, (i+0.5)/10)
+	pi.run()
+	epsilons.append((i+0.5)/10)
+	value_f.append(np.mean(pi.V))
+	policy.append(pi.policy)
+	iterations.append(pi.iter)
+	time_taken.append(pi.time)
+
+# Plot Execution Time. #
+plot.plot_pi_execution_time(epsilons, time_taken, problemName)
+
+# Plot Rewards. #
+plot.plot_pi_rewards(epsilons, value_f, problemName)
+
+# Plot Convergence. #
+plot.plot_pi_convergence(epsilons, iterations, problemName)
+
+####################
+# Value Iteration. #
+####################
+print('Performing VI Tests...')
+
+value_f = []
+policy = []
+iterations = []
+time_taken = []
+epsilons = []
+
+for i in range(0,10):
+	pi = mdptoolbox.mdp.ValueIteration(P, R, (i+0.5)/10)
+	pi.run()
+	epsilons.append((i+0.5)/10)
+	value_f.append(np.mean(pi.V))
+	policy.append(pi.policy)
+	iterations.append(pi.iter)
+	time_taken.append(pi.time)
+
+# Plot Execution Time. #
+plot.plot_vi_execution_time(epsilons, time_taken, problemName)
+
+# Plot Rewards. #
+plot.plot_vi_rewards(epsilons, value_f, problemName)
+
+# Plot Convergence. #	
+plot.plot_vi_convergence(epsilons, iterations, problemName)
 	
-# Plot PI Execution Time. #
-plt.plot_pi_execution_time(gamma_arr, time_array, 'ForestManagement')
-	# plt.xlabel('Gammas')
-	# plt.title('Frozen Lake - Policy Iteration - Execution Time Analysis')
-	# plt.ylabel('Execution Time (s)')
-	# plt.grid()
-	# plt.show()
+###############
+# Q-Learning. #
+###############
 
-# Plot PI Rewards. #
-plt.plot_pi_rewards(gamma_arr, list_scores, 'ForestManagement')
-	# plt.plot(gamma_arr,list_scores)
-	# plt.xlabel('Gammas')
-	# plt.ylabel('Average Rewards')
-	# plt.title('Frozen Lake - Policy Iteration - Reward Analysis')
-	# plt.grid()
-	# plt.show()
+##################
+# Tune Discount. #
+##################
+print('Performing Q-Learning Tests - Discount Rate')
 
-# Plot PI Convergence. #
-plt.plot_pi_convergence(gamma_arr, iters, 'ForestManagement')
+value_f = []
+policy = []
+iterations = []
+time_taken = []
+epsilons = []
 
-	# plt.plot(gamma_arr,iters)
-	# plt.xlabel('Gammas')
-	# plt.ylabel('Iterations to Converge')
-	# plt.title('Frozen Lake - Policy Iteration - Convergence Analysis')
-	# plt.grid()
-	# plt.show()
+for discountRate in [0.05,0.15,0.25,0.5,0.75,0.95]:
+	pi = mdptoolbox.mdp.QLearning(P, R, discountRate, n_iter=1000000)
+	pi.run()
+	epsilons.append(discountRate)
+	iterations.append(1000000)
+	value_f.append(np.mean(pi.V))
+	policy.append(pi.policy)
+	time_taken.append(pi.time)
 
-	
-	# ### VALUE ITERATION ###
-	# print('VALUE ITERATION WITH FROZEN LAKE')
-	# best_vals=[0]*10
-	# for i in range(0,10):
-	# 	st=time.time()
-	# 	best_value,k = value_iteration(env, gamma = (i+0.5)/10)
-	# 	policy = extract_policy(env,best_value, gamma = (i+0.5)/10)
-	# 	policy_score = evaluate_policy(env, policy, gamma=(i+0.5)/10, n=1000)
-	# 	gamma = (i+0.5)/10
-	# 	plot = plot_policy_map('Frozen Lake Policy Map Iteration '+ str(i) + ' (Value Iteration) ' + 'Gamma: '+ str(gamma),policy.reshape(4,4),desc,colors_lake(),directions_lake())
-	# 	end=time.time()
-	# 	gamma_arr[i]=(i+0.5)/10
-	# 	iters[i]=k
-	# 	best_vals[i] = best_value
-	# 	list_scores[i]=np.mean(policy_score)
-	# 	time_array[i]=end-st
+# Plot Convergence. #
+plot.plot_qlearning_convergence(epsilons, iterations, problemName, '-DiscountRate')
 
+# Plot Execution Time. #
+plot.plot_qlearning_execution_time(epsilons, time_taken, problemName, '-DiscountRate')
 
+# Plot Rewards. #
+plot.plot_qlearning_rewards(epsilons, value_f, problemName, '-DiscountRate')
 
-	# plt.plot(gamma_arr, time_array)
-	# plt.xlabel('Gammas')
-	# plt.title('Frozen Lake - Value Iteration - Execution Time Analysis')
-	# plt.ylabel('Execution Time (s)')
-	# plt.grid()
-	# plt.show()
+####################
+# Tune Iterations. #
+####################
+print('Performing Q-Learning Tests - Iterations')
 
-	# plt.plot(gamma_arr,list_scores)
-	# plt.xlabel('Gammas')
-	# plt.ylabel('Average Rewards')
-	# plt.title('Frozen Lake - Value Iteration - Reward Analysis')
-	# plt.grid()
-	# plt.show()
+value_f = []
+policy = []
+iterations = []
+time_taken = []
+epsilons = []
 
-	# plt.plot(gamma_arr,iters)
-	# plt.xlabel('Gammas')
-	# plt.ylabel('Iterations to Converge')
-	# plt.title('Frozen Lake - Value Iteration - Convergence Analysis')
-	# plt.grid()
-	# plt.show()
+for iteration in [10000, 15000, 20000, 25000, 50000, 75000, 100000, 250000, 500000, 1000000]:
+	pi = mdptoolbox.mdp.QLearning(P, R, .95, n_iter=iteration)
+	pi.run()
+	epsilons.append(iteration)
+	iterations.append(iteration)
+	value_f.append(np.mean(pi.V))
+	policy.append(pi.policy)
+	time_taken.append(pi.time)
 
-	# plt.plot(gamma_arr,best_vals)
-	# plt.xlabel('Gammas')
-	# plt.ylabel('Optimal Value')
-	# plt.title('Frozen Lake - Value Iteration - Best Value Analysis')
-	# plt.grid()
-	# plt.show()
+# Plot Convergence. #
+plot.plot_qlearning_convergence(epsilons, iterations, problemName, '-Iterations')
 
-	# ### Q-LEARNING #####
-	# print('Q LEARNING WITH FROZEN LAKE')
-	# st = time.time()
-	# reward_array = []
-	# iter_array = []
-	# size_array = []
-	# chunks_array = []
-	# averages_array = []
-	# time_array = []
-	# Q_array = []
-	# for epsilon in [0.05,0.15,0.25,0.5,0.75,0.90]:
-	# 	Q = np.zeros((env.observation_space.n, env.action_space.n))
-	# 	rewards = []
-	# 	iters = []
-	# 	optimal=[0]*env.observation_space.n
-	# 	alpha = 0.85
-	# 	gamma = 0.95
-	# 	episodes = 30000
-	# 	environment  = 'FrozenLake-v0'
-	# 	env = gym.make(environment)
-	# 	env = env.unwrapped
-	# 	desc = env.unwrapped.desc
-	# 	for episode in range(episodes):
-	# 		state = env.reset()
-	# 		done = False
-	# 		t_reward = 0
-	# 		max_steps = 1000000
-	# 		for i in range(max_steps):
-	# 			if done:
-	# 				break        
-	# 			current = state
-	# 			if np.random.rand() < (epsilon):
-	# 				action = np.argmax(Q[current, :])
-	# 			else:
-	# 				action = env.action_space.sample()
-				
-	# 			state, reward, done, info = env.step(action)
-	# 			t_reward += reward
-	# 			Q[current, action] += alpha * (reward + gamma * np.max(Q[state, :]) - Q[current, action])
-	# 		epsilon=(1-2.71**(-episode/1000))
-	# 		rewards.append(t_reward)
-	# 		iters.append(i)
+# Plot Execution Time. #
+plot.plot_qlearning_execution_time(epsilons, time_taken, problemName, '-Iterations')
 
-
-	# 	for k in range(env.observation_space.n):
-	# 		optimal[k]=np.argmax(Q[k, :])
-
-	# 	reward_array.append(rewards)
-	# 	iter_array.append(iters)
-	# 	Q_array.append(Q)
-
-	# 	env.close()
-	# 	end=time.time()
-	# 	#print("time :",end-st)
-	# 	time_array.append(end-st)
-
-	# 	# Plot results
-	# 	def chunk_list(l, n):
-	# 		for i in range(0, len(l), n):
-	# 			yield l[i:i + n]
-
-	# 	size = int(episodes / 50)
-	# 	chunks = list(chunk_list(rewards, size))
-	# 	averages = [sum(chunk) / len(chunk) for chunk in chunks]
-	# 	size_array.append(size)
-	# 	chunks_array.append(chunks)
-	# 	averages_array.append(averages)
-
-	# plt.plot(range(0, len(reward_array[0]), size_array[0]), averages_array[0],label='epsilon=0.05')
-	# plt.plot(range(0, len(reward_array[1]), size_array[1]), averages_array[1],label='epsilon=0.15')
-	# plt.plot(range(0, len(reward_array[2]), size_array[2]), averages_array[2],label='epsilon=0.25')
-	# plt.plot(range(0, len(reward_array[3]), size_array[3]), averages_array[3],label='epsilon=0.50')
-	# plt.plot(range(0, len(reward_array[4]), size_array[4]), averages_array[4],label='epsilon=0.75')
-	# plt.plot(range(0, len(reward_array[5]), size_array[5]), averages_array[5],label='epsilon=0.95')
-	# plt.legend()
-	# plt.xlabel('Iterations')
-	# plt.grid()
-	# plt.title('Frozen Lake - Q Learning - Constant Epsilon')
-	# plt.ylabel('Average Reward')
-	# plt.show()
-
-	# plt.plot([0.05,0.15,0.25,0.5,0.75,0.95],time_array)
-	# plt.xlabel('Epsilon Values')
-	# plt.grid()
-	# plt.title('Frozen Lake - Q Learning')
-	# plt.ylabel('Execution Time (s)')
-	# plt.show()
-
-	# plt.subplot(1,6,1)
-	# plt.imshow(Q_array[0])
-	# plt.title('Epsilon=0.05')
-
-	# plt.subplot(1,6,2)
-	# plt.title('Epsilon=0.15')
-	# plt.imshow(Q_array[1])
-
-	# plt.subplot(1,6,3)
-	# plt.title('Epsilon=0.25')
-	# plt.imshow(Q_array[2])
-
-	# plt.subplot(1,6,4)
-	# plt.title('Epsilon=0.50')
-	# plt.imshow(Q_array[3])
-
-	# plt.subplot(1,6,5)
-	# plt.title('Epsilon=0.75')
-	# plt.imshow(Q_array[4])
-
-	# plt.subplot(1,6,6)
-	# plt.title('Epsilon=0.95')
-	# plt.imshow(Q_array[5])
-	# plt.colorbar()
-
-	# plt.show()
+# Plot Rewards. #
+plot.plot_qlearning_rewards(epsilons, value_f, problemName, '-Iterations')

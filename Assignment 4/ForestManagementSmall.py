@@ -12,8 +12,8 @@ import mdptoolbox.example
 import Plotting as plot
 import matplotlib.pyplot as plt
 
-problemName = 'ForestManagement'
-P, R = mdptoolbox.example.forest(S=5000)
+problemName = 'ForestManagementSmall'
+P, R = mdptoolbox.example.forest(S=500)
 
 #####################
 # Policy Iteration. #
